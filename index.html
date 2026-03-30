@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stream Pk Tv — Live Pakistan Television</title>
+    <meta name="description" content="Watch Live Pakistani TV Channels — Entertainment, News, Kids, Movies, Regional & Islamic channels all in one place.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://vjs.zencdn.net/8.8.0/video-js.css" rel="stylesheet">
+
+    <style>
+        /* ============================================
+           CSS VARIABLES & RESET
+        ============================================ */
+        :root {
+            --bg-primary: #080b14;
+            --bg-secondary: #0d1220;
+            --bg-card: rgba(255,255,255,0.04);
+            --accent-green: #00e676;
+            --accent-teal: #00bcd4;
+            --accent-gold: #ffd740;
+            --accent-red: #ff1744;
+            --text-primary: #eef2ff;
+            --text-muted: #7986a3;
+            --border: rgba(255,255,255,0.08);
+            --glow-green: 0 0 20px rgba(0,230,118,0.35);
+            --glow-teal: 0 0 20px rgba(0,188,212,0.35);
+            --radius: 14px;
+            --header-h: 68px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Exo 2', sans-serif;
+            font-weight: 400;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        a { text-decoration: none; color: inherit; }
+        ul { list-style: none; }
+        img { display: block; }
+
+        /* ============================================
+           NOISE TEXTURE OVERLAY
+        ============================================ */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.5;
+        }
+
+        /* ============================================
+           SPLASH SCREEN
+        ============================================ */
+        #splash {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #04060f;
+            overflow: hidden;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+
+        #splash.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        /* Animated radial bg */
+        #splash::before {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0,230,118,0.12) 0%, transparent 70%);
+            animation: pulse-bg 3s ease-in-out infinite;
+        }
+
+        #splash::after {
+            content: '';
+            position: absolute;
+            width: 800px;
+            height: 800px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0,188,212,0.06) 0%, transparent 70%);
+            animation: pulse-bg 3s ease-in-out infinite reverse;
+        }
+
+        @keyframes pulse-bg {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.15); opacity: 0.7; }
+        }
+
+        .splash-inner {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 28px;
+            animation: splash-in 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+
+        @keyframes splash-in {
+            from { opacity: 0; transform: scale(0.7) translateY(30px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .splash-logo-ring {
+            position: relative;
+            width: 130px;
+            height: 130px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .splash-logo-ring::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            border-top-color: var(--accent-green);
+            border-right-color: var(--accent-teal);
+            animation: ring-spin 1.5s linear infinite;
+        }
+
+        .splash-logo-ring::after {
+            content: '';
+            position: absolute;
+            inset: 8px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            border-bottom-color: var(--accent-gold);
+            animation: ring-spin 2.2s linear infinite reverse;
+        }
+
+        @keyframes ring-spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .splash-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0d1f3a, #0a1628);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 40px rgba(0,230,118,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+        }
+
+        .splash-icon svg {
+            width: 40px;
+            height: 40px;
+        }
+
+        .splash-title {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(2rem, 8vw, 3.2rem);
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-teal), var(--accent-gold));
+            background-size: 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradient-flow 3s linear infinite;
+            text-align: center;
+        }
+
+        @keyframes gradient-flow {
+            0% { background-position: 0% }
+            100% { background-position: 300% }
+        }
+
+        .splash-tagline {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            font-weight: 300;
+        }
+
+        .splash-progress-wrap {
+            width: 220px;
+            height: 3px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 99px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .splash-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-teal));
+            border-radius: 99px;
+            width: 0%;
+            animation: progress-fill 2.5s ease-in-out forwards;
+            box-shadow: 0 0 10px rgba(0,230,118,0.6);
+        }
+
+        @keyframes progress-fill {
+            0% { width: 0%; }
+            60% { width: 75%; }
+            100% { width: 100%; }
+        }
+
+        .splash-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .splash-dots span {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            animation: dot-bounce 1.2s ease-in-out infinite;
+        }
+        .splash-dots span:nth-child(2) { animation-delay: 0.2s; background: var(--accent-teal); }
+        .splash-dots span:nth-child(3) { animation-delay: 0.4s; background: var(--accent-gold); }
+
+        @keyframes dot-bounce {
+            0%, 100% { transform: translateY(0); opacity: 0.5; }
+            50% { transform: translateY(-8px); opacity: 1; }
+        }
+
+        /* ============================================
+           HEADER
+        ============================================ */
+        #site-header {
+            position: sticky;
+            top: 0;
+            z-index: 500;
+            height: var(--header-h);
+            background: rgba(8,11,20,0.85);
+            backdrop-filter: blur(18px) saturate(180%);
+            -webkit-backdrop-filter: blur(18px) saturate(180%);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 16px;
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .header-logo-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-teal));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--glow-green);
+        }
+
+        .header-logo-icon svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .header-logo-text {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.1rem;
+            font-weight: 900;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-teal));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+        }
+
+        /* Desktop nav */
+        .header-nav {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: 20px;
+        }
+
+        .header-nav a {
+            padding: 6px 14px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            border-radius: 8px;
+            transition: color 0.2s, background 0.2s;
+        }
+
+        .header-nav a:hover,
+        .header-nav a.active {
+            color: var(--accent-green);
+            background: rgba(0,230,118,0.08);
+        }
+
+        .header-spacer { flex: 1; }
+
+        /* Search */
+        .header-search {
+            display: flex;
+            align-items: center;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            border-radius: 99px;
+            padding: 7px 14px;
+            gap: 8px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            max-width: 220px;
+        }
+
+        .header-search:focus-within {
+            border-color: var(--accent-teal);
+            box-shadow: 0 0 0 3px rgba(0,188,212,0.15);
+        }
+
+        .header-search input {
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--text-primary);
+            font-family: 'Exo 2', sans-serif;
+            font-size: 0.82rem;
+            width: 120px;
+        }
+
+        .header-search input::placeholder { color: var(--text-muted); }
+
+        .header-search svg { flex-shrink: 0; }
+
+        /* Login btn */
+        .header-login {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 7px 16px;
+            border-radius: 99px;
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-teal));
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            color: #04060f;
+            text-transform: uppercase;
+            transition: box-shadow 0.25s, transform 0.2s;
+            white-space: nowrap;
+        }
+
+        .header-login:hover {
+            box-shadow: var(--glow-green);
+            transform: translateY(-1px);
+        }
+
+        /* Hamburger */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            padding: 4px;
+            margin-left: auto;
+        }
+
+        .hamburger span {
+            width: 24px;
+            height: 2px;
+            background: var(--text-primary);
+            border-radius: 99px;
+            transition: transform 0.3s, opacity 0.3s;
+        }
+
+        /* Mobile nav drawer */
+        .mobile-drawer {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 800;
+            pointer-events: none;
+        }
+
+        .mobile-drawer.open { pointer-events: all; }
+
+        .mobile-drawer-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            opacity: 0;
+            transition: opacity 0.3s;
+            backdrop-filter: blur(4px);
+        }
+
+        .mobile-drawer.open .mobile-drawer-overlay { opacity: 1; }
+
+        .mobile-drawer-panel {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 280px;
+            height: 100%;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border);
+            transform: translateX(100%);
+            transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+            padding: 28px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow-y: auto;
+        }
+
+        .mobile-drawer.open .mobile-drawer-panel {
+            transform: translateX(0);
+        }
+
+        .drawer-logo {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.2rem;
+            font-weight: 900;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-teal));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+        }
+
+        .drawer-close {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            background: rgba(255,255,255,0.06);
+            border: none;
+            color: var(--text-primary);
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .drawer-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .drawer-nav-item:hover,
+        .drawer-nav-item.active {
+            background: rgba(0,230,118,0.08);
+            color: var(--accent-green);
+        }
+
+        .drawer-nav-item svg {
+            flex-shrink: 0;
+            width: 18px;
+            height: 18px;
+        }
+
+        /* ============================================
+           MAIN LAYOUT
+        ============================================ */
+        main {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ============================================
+           VIDEO PLAYER SECTION — STICKY
+        ============================================ */
+        #player-section {
+            position: sticky;
+            top: var(--header-h);
+            z-index: 200;
+            background: var(--bg-primary);
+            background: linear-gradient(180deg, rgba(0,230,118,0.06) 0%, var(--bg-primary) 100%);
+            padding: 14px 16px 16px;
+            border-bottom: 1px solid var(--border);
+            box-shadow: 0 4px 32px rgba(0,0,0,0.6);
+        }
+
+        .player-wrapper {
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        .player-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .live-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--accent-red);
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            padding: 4px 10px;
+            border-radius: 99px;
+            text-transform: uppercase;
+            animation: live-pulse 2s ease-in-out infinite;
+        }
+
+        .live-badge::before {
+            content: '';
+            width: 7px;
+            height: 7px;
+            background: white;
+            border-radius: 50%;
+            animation: live-dot 1.5s ease-in-out infinite;
+        }
+
+        @keyframes live-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255,23,68,0.5); }
+            50% { box-shadow: 0 0 0 6px rgba(255,23,68,0); }
+        }
+
+        @keyframes live-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .player-channel-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            transition: color 0.3s;
+        }
+
+        .player-box {
+            position: relative;
+            width: 100%;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 8px 60px rgba(0,0,0,0.7), 0 0 0 1px var(--border);
+        }
+
+        .video-js {
+            width: 100% !important;
+            height: auto !important;
+            aspect-ratio: 16/9;
+            border-radius: 18px;
+        }
+
+        .vjs-matrix .vjs-control-bar { background: linear-gradient(0deg, rgba(4,6,15,0.9), transparent); }
+
+        /* ============================================
+           CATEGORY FILTER TABS
+        ============================================ */
+        #filter-bar {
+            padding: 0 16px;
+            margin-bottom: 4px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        #filter-bar::-webkit-scrollbar { display: none; }
+
+        .filter-inner {
+            display: flex;
+            gap: 8px;
+            padding: 16px 0 4px;
+            width: max-content;
+        }
+
+        .filter-btn {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 18px;
+            border-radius: 99px;
+            font-family: 'Exo 2', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-muted);
+            transition: all 0.25s;
+            white-space: nowrap;
+        }
+
+        .filter-btn:hover {
+            border-color: rgba(255,255,255,0.2);
+            color: var(--text-primary);
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, rgba(0,230,118,0.15), rgba(0,188,212,0.1));
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+            box-shadow: 0 0 14px rgba(0,230,118,0.15);
+        }
+
+        .filter-btn .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+        }
+
+        /* ============================================
+           CHANNELS SECTION
+        ============================================ */
+        #channels-section {
+            padding: 8px 16px 32px;
+        }
+
+        .category-block {
+            margin-bottom: 36px;
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .category-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .category-title {
+            font-family: 'Exo 2', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-primary);
+        }
+
+        .category-count {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-weight: 400;
+            margin-left: auto;
+        }
+
+        .channels-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 12px;
+        }
+
+        /* Channel Card */
+        .ch-card {
+            position: relative;
+            cursor: pointer;
+            border-radius: var(--radius);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            aspect-ratio: 1;
+            transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+        }
+
+        .ch-card:hover {
+            transform: translateY(-4px) scale(1.03);
+            border-color: rgba(0,230,118,0.4);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.5), var(--glow-green);
+        }
+
+        .ch-card.playing {
+            border-color: var(--accent-green);
+            box-shadow: 0 0 0 2px rgba(0,230,118,0.3), var(--glow-green);
+        }
+
+        .ch-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+
+        .ch-card:hover img { transform: scale(1.06); }
+
+        .ch-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(4,6,15,0.85) 0%, rgba(4,6,15,0.1) 60%, transparent 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 8px;
+        }
+
+        .ch-live-dot {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 8px;
+            height: 8px;
+            background: var(--accent-red);
+            border-radius: 50%;
+            box-shadow: 0 0 6px var(--accent-red);
+            animation: live-dot 1.5s ease-in-out infinite;
+        }
+
+        .ch-play-icon {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .ch-card:hover .ch-play-icon { opacity: 1; }
+
+        .ch-play-icon svg {
+            width: 36px;
+            height: 36px;
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.8));
+        }
+
+        .ch-playing-icon {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            display: none;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .ch-card.playing .ch-playing-icon { display: flex; }
+
+        .ch-playing-icon span {
+            display: block;
+            width: 3px;
+            background: var(--accent-green);
+            border-radius: 99px;
+            animation: equalizer 0.8s ease-in-out infinite alternate;
+        }
+
+        .ch-playing-icon span:nth-child(1) { height: 8px; animation-delay: 0s; }
+        .ch-playing-icon span:nth-child(2) { height: 14px; animation-delay: 0.2s; }
+        .ch-playing-icon span:nth-child(3) { height: 6px; animation-delay: 0.4s; }
+
+        @keyframes equalizer {
+            from { transform: scaleY(0.4); }
+            to { transform: scaleY(1); }
+        }
+
+        /* ============================================
+           FOOTER
+        ============================================ */
+        #site-footer {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            padding: 36px 20px 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .footer-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 32px;
+            margin-bottom: 32px;
+        }
+
+        .footer-brand-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.3rem;
+            font-weight: 900;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-teal));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+        }
+
+        .footer-tagline {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .footer-col-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 14px;
+        }
+
+        .footer-links { display: flex; flex-direction: column; gap: 10px; }
+
+        .footer-links a {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover { color: var(--accent-green); }
+
+        .footer-bottom {
+            border-top: 1px solid var(--border);
+            padding-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* ============================================
+           SCROLL TO TOP
+        ============================================ */
+        #scroll-top {
+            position: fixed;
+            bottom: 24px;
+            right: 20px;
+            z-index: 400;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-teal));
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.3s, transform 0.3s;
+            box-shadow: var(--glow-green);
+        }
+
+        #scroll-top.visible { opacity: 1; transform: translateY(0); }
+
+        /* ============================================
+           RESPONSIVE
+        ============================================ */
+        @media (max-width: 768px) {
+            .header-nav { display: none; }
+            .header-search { display: none; }
+            .header-login { display: none; }
+            .hamburger { display: flex; }
+            .mobile-drawer { display: block; }
+
+            .footer-inner { grid-template-columns: 1fr; gap: 24px; }
+            .channels-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 10px; }
+        }
+
+        @media (max-width: 420px) {
+            .channels-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        }
+
+        @media (min-width: 769px) {
+            #player-section { padding: 16px 32px 18px; }
+            #filter-bar { padding: 0 32px; }
+            #channels-section { padding: 8px 32px 40px; }
+            .channels-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 14px; }
+        }
+
+        @media (min-width: 1100px) {
+            #player-section { padding: 16px 48px 18px; }
+            #filter-bar { padding: 0 48px; }
+            #channels-section { padding: 8px 48px 48px; }
+        }
+
+        /* Mobile: compact sticky player */
+        @media (max-width: 768px) {
+            #player-section { padding: 10px 12px 12px; }
+            .player-label { margin-bottom: 8px; }
+        }
+
+        /* Loading shimmer for images */
+        .ch-card img { background: rgba(255,255,255,0.05); }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 99px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
+    </style>
+</head>
+<body>
+
+<!-- ============================================================
+     SPLASH SCREEN
+============================================================ -->
+<div id="splash">
+    <div class="splash-inner">
+        <div class="splash-logo-ring">
+            <div class="splash-icon">
+                <!-- Play / TV icon -->
+                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="4" y="8" width="40" height="28" rx="4" stroke="url(#sg)" stroke-width="2.5"/>
+                    <path d="M14 44h20" stroke="url(#sg)" stroke-width="2.5" stroke-linecap="round"/>
+                    <path d="M24 44v-8" stroke="url(#sg)" stroke-width="2.5" stroke-linecap="round"/>
+                    <path d="M20 18.5L29 24L20 29.5V18.5Z" fill="url(#sg)"/>
+                    <defs>
+                        <linearGradient id="sg" x1="4" y1="8" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#00e676"/>
+                            <stop offset="1" stop-color="#00bcd4"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+        </div>
+        <div class="splash-title">Stream Pk Tv</div>
+        <div class="splash-tagline">Pakistan's Live TV — Anywhere, Anytime</div>
+        <div class="splash-progress-wrap">
+            <div class="splash-progress-bar"></div>
+        </div>
+        <div class="splash-dots">
+            <span></span><span></span><span></span>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     HEADER
+============================================================ -->
+<header id="site-header">
+    <a href="#" class="header-logo">
+        <div class="header-logo-icon">
+            <svg viewBox="0 0 24 24" fill="none">
+                <rect x="2" y="4" width="20" height="14" rx="2" stroke="#04060f" stroke-width="2"/>
+                <path d="M7 22h10" stroke="#04060f" stroke-width="2" stroke-linecap="round"/>
+                <path d="M12 22v-4" stroke="#04060f" stroke-width="2" stroke-linecap="round"/>
+                <path d="M10 9.5L15 12L10 14.5V9.5Z" fill="#04060f"/>
+            </svg>
+        </div>
+        <span class="header-logo-text">Stream Pk Tv</span>
+    </a>
+
+    <nav class="header-nav">
+        <a href="#" class="active">Home</a>
+        <a href="#">Entertainment</a>
+        <a href="#">News</a>
+        <a href="#">Movies</a>
+        <a href="#">Kids</a>
+        <a href="#">Sports</a>
+    </nav>
+
+    <div class="header-spacer"></div>
+
+    <div class="header-search">
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+            <circle cx="9" cy="9" r="7" stroke="#7986a3" stroke-width="2"/>
+            <path d="M14.5 14.5L18 18" stroke="#7986a3" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <input type="text" placeholder="Search channels...">
+    </div>
+
+    <a href="https://zongmobiletv.com/login" class="header-login">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <path d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" fill="currentColor"/>
+            <path d="M20 21C20 17.134 16.418 14 12 14C7.58172 14 4 17.134 4 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        Login
+    </a>
+
+    <!-- Hamburger -->
+    <div class="hamburger" id="hamburger" onclick="toggleDrawer()">
+        <span></span><span></span><span></span>
+    </div>
+</header>
+
+<!-- Mobile Drawer -->
+<div class="mobile-drawer" id="mobileDrawer">
+    <div class="mobile-drawer-overlay" onclick="closeDrawer()"></div>
+    <div class="mobile-drawer-panel">
+        <div class="drawer-logo">Stream Pk Tv</div>
+        <button class="drawer-close" onclick="closeDrawer()">✕</button>
+        <a href="#" class="drawer-nav-item active" onclick="closeDrawer()">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            Home
+        </a>
+        <a href="#cat-entertainment" class="drawer-nav-item" onclick="filterCategory('Entertainment'); closeDrawer();">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M16 3l-4 4-4-4"/></svg>
+            Entertainment
+        </a>
+        <a href="#cat-news" class="drawer-nav-item" onclick="filterCategory('News'); closeDrawer();">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M15 18h-5M10 6h8v4h-8z"/></svg>
+            News
+        </a>
+        <a href="#cat-kids" class="drawer-nav-item" onclick="filterCategory('Kids'); closeDrawer();">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+            Kids
+        </a>
+        <a href="#cat-movies" class="drawer-nav-item" onclick="filterCategory('Movies'); closeDrawer();">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>
+            Movies
+        </a>
+        <a href="#cat-regional" class="drawer-nav-item" onclick="filterCategory('Regional'); closeDrawer();">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            Regional
+        </a>
+        <a href="#cat-islamic" class="drawer-nav-item" onclick="filterCategory('Islamic'); closeDrawer();">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            Islamic
+        </a>
+
+    </div>
+</div>
+
+<!-- ============================================================
+     MAIN
+============================================================ -->
+<main>
+
+    <!-- VIDEO PLAYER -->
+    <section id="player-section">
+        <div class="player-wrapper">
+            <div class="player-label">
+                <div class="live-badge">Live</div>
+                <span class="player-channel-name" id="now-playing">BOL Entertainment HD</span>
+            </div>
+            <div class="player-box">
+                <video-js id="my-video"
+                    class="video-js vjs-styles-dimensions vjs-matrix vjs-big-play-centered"
+                    controls autoplay preload="auto" data-setup="{}">
+                    <source src="https://s2.ideationtec.live/BOL_Entertainment_HD/BOL_Entertainment_HD.m3u8" type="application/x-mpegURL">
+                </video-js>
+            </div>
+        </div>
+    </section>
+
+    <!-- FILTER BAR -->
+    <div id="filter-bar">
+        <div class="filter-inner" id="filterTabs">
+            <button class="filter-btn active" onclick="filterCategory('all', this)" data-cat="all">
+                <span class="dot" style="background:var(--accent-green)"></span>All Channels
+            </button>
+            <button class="filter-btn" onclick="filterCategory('Entertainment', this)" data-cat="Entertainment">
+                <span class="dot" style="background:#ff6b35"></span>Entertainment
+            </button>
+            <button class="filter-btn" onclick="filterCategory('News', this)" data-cat="News">
+                <span class="dot" style="background:#00bcd4"></span>News
+            </button>
+            <button class="filter-btn" onclick="filterCategory('Movies', this)" data-cat="Movies">
+                <span class="dot" style="background:#ffd740"></span>Movies
+            </button>
+            <button class="filter-btn" onclick="filterCategory('Kids', this)" data-cat="Kids">
+                <span class="dot" style="background:#f48fb1"></span>Kids
+            </button>
+            <button class="filter-btn" onclick="filterCategory('Regional', this)" data-cat="Regional">
+                <span class="dot" style="background:#ce93d8"></span>Regional
+            </button>
+            <button class="filter-btn" onclick="filterCategory('Islamic', this)" data-cat="Islamic">
+                <span class="dot" style="background:#a5d6a7"></span>Islamic
+            </button>
+        </div>
+    </div>
+
+    <!-- CHANNELS -->
+    <section id="channels-section">
+
+        <!-- ===== ENTERTAINMENT ===== -->
+        <div class="category-block" data-category="Entertainment" id="cat-entertainment">
+            <div class="category-header">
+                <div class="category-icon" style="background:rgba(255,107,53,0.12)">🎬</div>
+                <span class="category-title">Entertainment</span>
+                <span class="category-count" id="count-Entertainment"></span>
+            </div>
+            <div class="channels-grid">
+                <div class="ch-card" onclick="changeChannel('https://s1.ideationtec.live/SET_Ent/SET_Ent.m3u8','SET Entertainment')" title="SET Entertainment"><img src="https://media.zongmobiletv.com/file/channel_thumbs/set-entertainment.webp" alt="SET Entertainment" loading="lazy"><div class="ch-overlay"></div><div class="ch-live-dot"></div><div class="ch-play-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(0,230,118,0.85)"/><path d="M19 16l14 8-14 8V16z" fill="white"/></svg></div><div class="ch-playing-icon"><span></span><span></span><span></span></div></div>
+                <div class="ch-card" onclick="changeChannel('https://s2.ideationtec.live/BOL_Entertainment_HD/BOL_Entertainment_HD.m3u8','BOL Entertainment HD')" title="BOL Entertainment"><img src="https://media.zongmobiletv.com/file/channel_thumbs/eD7sxTJSbqALPtmTBxrDwRvjNCCWfoU9TRIKBRQ7.webp" alt="BOL Entertainment" loading="lazy"><div class="ch-overlay"></div><div class="ch-live-dot"></div><div class="ch-play-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(0,230,118,0.85)"/><path d="M19 16l14 8-14 8V16z" fill="white"/></svg></div><div class="ch-playing-icon"><span></span><span></span><span></span></div></div>
+                <div class="ch-card" onclick="changeChannel('https://s2.ideationtec.live/AAJ_Entertainment/AAJ_Entertainment.m3u8','Aaj Entertainment')" title="Aaj Entertainment"><img src="https://media.zongmobiletv.com/file/channel_thumbs/YatXxwzp3ztHqyhxwmbOuULnvzmaSbTAHjqFFK5M.webp" alt="Aaj Entertainment" loading="lazy"><div class="ch-overlay"></div><div class="ch-live-dot"></div><div class="ch-play-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(0,230,118,0.85)"/><path d="M19 16l14 8-14 8V16z" fill="white"/></svg></div><div class="ch-playing-icon"><span></span><span></span><span></span></div></div>
+                <div class="ch-card" onclick="changeChannel('https://s5.ideationtec.live/AAN_HD/AAN_HD.m3u8','AAN TV')" title="AAN TV"><img src="https://media.zongmobiletv.com/file/channel_thumbs/lLYj9OWFSNjItWDOe8bqKxitz1EGfKpHMefh8JqW.webp" alt="AAN TV" loading="lazy"><div class="ch-overlay"></div><div class="ch-live-dot"></div><div class="ch-play-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(0,230,118,0.85)"/><path d="M19 16l14 8-14 8V16z" fill="white"/></svg></div><div class="ch-playing-icon"><span></span><span></span><span></span></div></div>
+                <div class="ch-card" onclick="changeChannel('https://s3.ideationtec.live/Discover_Pakistan/Discover_Pakistan.m3u8','Discover Pakistan')" title="Discover Pakistan"><img src="https://media.zongmobiletv.com/file/channel_thumbs/R7kAyBmpMVcGGuBhr9ClFda5I8B8ZEHTjMfSUmJ3.webp" alt="Discover Pakistan" loading="lazy"><div class="ch-overlay"></div><div class="ch-live-dot"></div><div class="ch-play-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(0,230,118,0.85)"/><path d="M19 16l14 8-14 8V16z" fill="white"/></svg></div><div class="ch-playing-icon"><span></span><span></span><span></span></div></div>
+                <div class="ch-card" onclick="changeChannel('https://s3.ideationtec.live/LTN_Family_HD/LTN_Family_HD.m3u8','LTN Family HD')" title="LTN Family HD"><img src="https://media.zongmobiletv.com/file/channel_thumbs/f8fkJ1vOiswnl5wYrroYM7Lt05ZJaZXbjM9Rqw3p.webp" alt="LTN Family HD" loading="lazy"><div class="ch-overlay"></div><div class="ch-live-dot"></div><div class="ch-play-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(0,230,118,0.85)"/><path d="M19 16l14 8-14 8V16z" fill="white"/></svg></div><div class="ch-playing-icon"><span></span><span></span><span></span></div></div>
+                <div class="ch-card" onclick="changeChannel('https://s3.ideationtec.live/A_Plus/A_Plus.m3u8','A Plus')" title="A Plus"><img src="https://media.zongmobiletv.com/file/channel_thumbs/lgTYCtTUrkBtCccza9WVuOBlmpWzs3ivCpxSVmXP.webp" alt="A Plus" loading="lazy"><div class="ch-overlay"></div><div class="ch-live-dot"></div><div class="ch-play-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(0,230,118,0.85)"/><path d="M19 16l14 8-14 8V16z" fill="white"/></svg></div><div class="ch-playing-icon"><span></span><span></span><span></span></div></div>
+                <div class="ch-card" onclick="changeChannel('https://s1.ideationtec.live/A1_Entertainment/A1_Entertainment.m3u8','A1 TV')" title="A1 TV"><img src="https://media.zongmobiletv.com/file/channel_thumbs/a1-tv-hd-logo-sZ.webp" alt="A1 TV" loading="lazy"><div class="ch-overlay"></div><div class="ch-live-dot"></div><div class="ch-play-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(0,230,118,0.85)"/><path d="M19 16l14 8-14 8V16z" fill="white"/></svg></div><div class="ch-playing-icon"><span></span><span></span><span></span></div></div>
+                <div class="ch-card" onclick="changeChannel('https://s1.ideationtec.live/SAB_Entertainment/SAB_Entertainment.m3u8','SAB TV')" title="SAB TV"><img src="https://media.zongmobiletv.com/file/channel_thumbs/TD4IEjGvgZtRNP5rZIZNcQh1iLiVxkgkXHuiZpYg.webp" alt="SAB TV" loading="lazy"><div class="ch-overlay"></div><div class="ch-live-dot"></div><div class="ch-play-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(0,230,118,0.85)"/><path d="M19 16l14 8-14 8V16z" fill="white"/></svg></div><div class="ch-playing-icon"><span></span><span></span><span></span></div></div>
+                <div class="ch-card" onclick="changeChannel('https://s3.ideationtec.live/Aur_Life/Aur_Life.m3u8','Aur Life')" title="Aur Life"><img src="https://media.zongmobiletv.com/file/channel_thumbs/aur-life-6n.webp" alt="Aur Life" loading="lazy"><div class="ch-overlay"></div><div class="ch-live-dot"></div><div class="ch-play-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(0,230,118,0.85)"/><path d="M19 16l14 8-14 8V16z" fill="white"/></svg></div><div class="ch-playing-icon"><span></span><span></span><span></span></div></div>
+            </div>
+        </div>
+
+        <!-- ===== NEWS ===== -->
+        <div class="category-block" data-category="News" id="cat-news">
+            <div class="category-header">
+                <div class="category-icon" style="background:rgba(0,188,212,0.12)">📡</div>
+                <span class="category-title">News</span>
+                <span class="category-count" id="count-News"></span>
+            </div>
+            <div class="channels-grid">
+                <div class="ch-card" onclick="changeChannel('https://s5.ideationtec.live/BOL_News_HD/BOL_News_HD.m3u8','BOL News HD')" title="BOL News"><img src="https://media.zongmobiletv.com/file/channel_thumbs/MuDcAofmaH4OJi9jh1kofhRSfS758kXWQbWGEgR8.webp" alt="BOL News" loading="lazy"><div class="ch-overlay"></div><div class="ch-live-dot"></div><div class="ch-play-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(0,188,212,0.85)"/><path d="M19 16l14 8-14 8V16z" fill="white"/></svg></div><div class="ch-playing-icon"><span></span><span></span><span></span></div></div>
+                <div class="ch-card" onclick="changeChannel('https://s4.ideationtec.live/GTV_News_HD/GTV_News_HD.m3u8','GTV News')" title="GTV News"><img src="https://media.zongmobiletv.com/file/channel_thumbs/Crbko79F4vHr4f3EnktlgKRbKcyTmVobNgdDcx21.webp" alt="GTV News" loading="lazy"><div class="ch-overlay"></div><div class="ch-live-dot"></div><div class="ch-play-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(0,188,212,0.85)"/><path d="M19 16l14 8-14 8V16z" fill="white"/></svg></div><div class="ch-playing-icon"><span></span><span></span><span></span></div></div>
+                <div class="ch-card" onclick="changeChannel('https://s5.ideationtec.live/GNN_HD/GNN_HD.m3u8','GNN HD')" title="GNN HD"><img src="https://media.zongmobiletv.com/file/channel_thumbs/to0In8cmEWEY3HdnVXzCHlJ6nlVeNgLYhkXkFY26.webp" alt="GNN HD" loading="lazy"><div class="ch-overlay"></div><div class="ch-live-dot"></div><div class="ch-play-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(0,188,212,0.85)"/><path d="M19 16l14 8-14 8V16z" fill="white"/></svg></div><div class="ch-playing-icon"><span></span><span></span><span></span></div></div>
+                <div class="ch-card" onclick="changeChannel('https://s4.ideationtec.live/Aaj_News/Aaj_News.m3u8','Aaj News')" title="Aaj News"><img src="https://media.zongmobiletv.com/file/channel_thumbs/gvwJC54GFcCCEsIOWQJyBT82Zxg6CqOGQeUmPRtp.webp" alt="Aaj News" loading="lazy"><div class="ch-overlay"></div><div class="ch-live-dot"></div><div class="ch-play-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(0,188,212,0.85)"/><path d="M19 16l14 8-14 8V16z" fill="white"/></svg></div><div class="ch-playing-icon"><span></span><span></span><span></span></div></div>
+                <div class="ch-card" onclick="changeChannel('https://s5.ideationtec.live/Dawn/Dawn.m3u8','Dawn News')" title="Dawn News"><img src="https://media.zongmobiletv.com/file/channel_thumbs/6fAqWaVseQjN2wC6sA4fh1sf11JDhi76NTsUG4rv.webp" alt="Dawn News" loading="lazy"><div class="ch-overlay"></div><div class="ch-live-dot"></div><div class="ch-play-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(0,188,212,0.85)"/><path d="M19 16l14 8-14 8V16z" fill="white"/></svg></div><div class="ch-playing-icon"><span></span><span></span><span></span></div></div>
+                <div class="ch-card" onclick="changeChannel('https://s5.ideationtec.live/Neo_News/Neo_News.m3u8','Neo News')" title="Neo News"><img src="https://media.zongmobiletv.com/file/channel_thumbs/g1V0LsEX09eTbSIgD54y4xUIrZiIWKqLy7hzXdzT.webp" alt="Neo News" loading="lazy"><div class="ch-overlay"></div><div class="ch-live-dot"></div><div class="ch-play-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(0,188,212,0.85)"/><path d="M19 16l14 8-14 8V16z" fill="white"/></svg></div><div class="ch-playing-icon"><span></span><span></span><span></span></div></div>
+                <div class="ch-card" onclick="changeChannel('https://s5.ideationtec.live/Roze_News/Roze_News.m3u8','Roze News')" title="Roze News"><img src="https://media.zongmobiletv.com/file/channel_thumbs/aFGinGzklVPVGj5cRTLPV0hpIg4d2nRmDFB9nMPO.webp" alt="Roze News" loading="lazy"><div class="ch-overlay"></div><div class="ch-live-dot"></div><div class="ch-play-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(0,188,212,0.85)"/><path d="M19 16l14 8-14 8V16z" fill="white"/></svg></div><div class="ch-playing-icon"><span></span><span></span><span></span></div></div>
+                <div class="ch-card" onclick="changeChannel('https://s4.ideationtec.live/Channel_24_HD/Channel_24_HD.m3u8','Channel 24')" title="Channel 24"><img src="https://media.zongmobiletv.com/file/channel_thumbs/YQkvVVZiEP72GwIeCmq6ix5UKByxITrZWkoqw5FE.webp" alt="Channel 24" loading="lazy"><div class="ch-overlay"></div><div class="ch-live-dot"></div><div class="ch-play-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(0,188,212,0.85)"/><path d="M19 16l14 8-14 8V16z" fill="white"/></svg></div><div class="ch-playing-icon"><span></span><span></span><span></span></div></div>
+                <div class="ch-card" onclick="changeChannel('https://s4.ideationtec.live/Metro_One/Metro_One.m3u8','Metro One')" title="Metro One"><img src="https://media.zongmobiletv.com/file/channel_thumbs/a7t330bCUiPcvqjDG0NXJ0RcylA1B9GiXVjZS5AK.webp" alt="Metro One" loading="lazy"><div class="ch-overlay"></div><div class="ch-live-dot"></div><div class="ch-play-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(0,188,212,0.85)"/><path d="M19 16l14 8-14 8V16z" fill="white"/></svg></div><div class="ch-playing-icon"><span></span><span></span><span></span></div></div>
+                <div class="ch-card" onclick="changeChannel('https://s1.ideationtec.live/DW_HD/DW_HD.m3u8','DW HD')" title="DW HD"><img src="https://media.zongmobiletv.com/file/channel_thumbs/800e45nzH6iIUjO6tnQp9z3Y1SFHSvqb9pegxt3f.webp" alt="DW HD" loading="lazy"><div class="ch-overlay"></div><div class="ch-live-dot"></div><div class="ch-play-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(0,188,212,0.85)"/><path d="M19 16l14 8-14 8V16z" fill="white"/></svg></div><div class="ch-playing-icon"><span></span><span></span><span></span></div></div>
+                <div class="ch-card" onclick="changeChannel('https://s4.ideationtec.live/cnn/cnn.m3u8','CNN')" title="CNN"><img src="https://media.zongmobiletv.com/file/channel_thumbs/7nfH0fgxeINbyRA2h4sfEP9xrF1ULGLlVfRHdmRf.webp" alt="CNN" loading="lazy"><div class="ch-overlay"></div><div class="ch-live-dot"></div><div class="ch-play-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(0,188,212,0.85)"/><path d="M19 16l14 8-14 8V16z" fill="white"/></svg></div><div class="ch-playing-icon"><span></span><span></span><span></span></div></div>
+                <div class="ch-card" onclick="changeChannel('https://s4.ideationtec.live/News_365/News_365.m3u8','News 365')" title="News 365"><img src="https://media.zongmobiletv.com/file/channel_thumbs/news-365-Uk.webp" alt="News 365" loading="lazy"><div class="ch-overlay"></div><div class="ch-live-dot"></div><div class="ch-play-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(0,188,212,0.85)"/><path d="M19 16l14 8-14 8V16z" fill="white"/></svg></div><div class="ch-playing-icon"><span></span><span></span><span></span></div></div>
+            </div>
+        </div>
+
+        <!-- ===== MOVIES ===== -->
+        <div class="category-block" data-category="Movies" id="cat-movies">
+            <div class="category-header">
+                <div class="category-icon" style="background:rgba(255,215,64,0.12)">🎥</div>
+                <span class="category-title">Movies</span>
+                <span class="category-count" id="count-Movies"></span>
+            </div>
+            <div class="channels-grid">
+                <div class="ch-card" onclick="changeChannel('https://s3.ideationtec.live/Filmax/Filmax.m3u8','Filmax')" title="Filmax"><img src="https://media.zongmobiletv.com/file/channel_thumbs/QOd8qZ4yQ55LZ1PfmE0yAJ6Yf2y8bDP3fvwkr7Nl.webp" alt="Filmax" loading="lazy"><div class="ch-overlay"></div><div class="ch-live-dot"></div><div class="ch-play-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(255,215,64,0.85)"/><path d="M19 16l14 8-14 8V16z" fill="white"/></svg></div><div class="ch-playing-icon"><span></span><span></span><span></span></div></div>
+            </div>
+        </div>
+
+        <!-- ===== KIDS ===== -->
+        <div class="category-block" data-category="Kids" id="cat-kids">
+            <div class="category-header">
+                <div class="category-icon" style="background:rgba(244,143,177,0.12)">🧸</div>
+                <span class="category-title">Kids</span>
+                <span class="category-count" id="count-Kids"></span>
+            </div>
+            <div class="channels-grid">
+                <div class="ch-card" onclick="changeChannel('https://s3.ideationtec.live/Cartoon_Network/Cartoon_Network.m3u8','Cartoon Network')" title="Cartoon Network"><img src="https://media.zongmobiletv.com/file/channel_thumbs/7RUuPuAK2ugmT3hANWrLQjc6q3QIKICYHB4PnFk4.webp" alt="Cartoon Network" loading="lazy"><div class="ch-overlay"></div><div class="ch-live-dot"></div><div class="ch-play-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(244,143,177,0.85)"/><path d="M19 16l14 8-14 8V16z" fill="white"/></svg></div><div class="ch-playing-icon"><span></span><span></span><span></span></div></div>
+                <div class="ch-card" onclick="changeChannel('https://s2.ideationtec.live/MiniMax/MiniMax.m3u8','MiniMax')" title="MiniMax"><img src="https://media.zongmobiletv.com/file/channel_thumbs/BbOpLxS9khoc6AWez4y2guwfwgohoNkifp0GHtly.webp" alt="MiniMax" loading="lazy"><div class="ch-overlay"></div><div class="ch-live-dot"></div><div class="ch-play-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(244,143,177,0.85)"/><path d="M19 16l14 8-14 8V16z" fill="white"/></svg></div><div class="ch-playing-icon"><span></span><span></span><span></span></div></div>
+            </div>
+        </div>
+
+        <!-- ===== REGIONAL ===== -->
+        <div class="category-block" data-category="Regional" id="cat-regional">
+            <div class="category-header">
+                <div class="category-icon" style="background:rgba(206,147,216,0.12)">🗺️</div>
+                <span class="category-title">Regional</span>
+                <span class="category-count" id="count-Regional"></span>
+            </div>
+            <div class="channels-grid">
+                <div class="ch-card" onclick="changeChannel('https://s2.ideationtec.live/City_41/City_41.m3u8','City 41')" title="City 41"><img src="https://media.zongmobiletv.com/file/channel_thumbs/4LIFWFL92ut2yDqsWDNFpXame1kSYcr8QGx9PNX1.webp" alt="City 41" loading="lazy"><div class="ch-overlay"></div><div class="ch-live-dot"></div><div class="ch-play-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(206,147,216,0.85)"/><path d="M19 16l14 8-14 8V16z" fill="white"/></svg></div><div class="ch-playing-icon"><span></span><span></span><span></span></div></div>
+                <div class="ch-card" onclick="changeChannel('https://s2.ideationtec.live/Roohi_TV/Roohi_TV.m3u8','Roohi TV')" title="Roohi TV"><img src="https://media.zongmobiletv.com/file/channel_thumbs/EtoT3uTSj91SrwwVtN1AqMZfx762VggprQf8cVxx.webp" alt="Roohi TV" loading="lazy"><div class="ch-overlay"></div><div class="ch-live-dot"></div><div class="ch-play-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(206,147,216,0.85)"/><path d="M19 16l14 8-14 8V16z" fill="white"/></svg></div><div class="ch-playing-icon"><span></span><span></span><span></span></div></div>
+                <div class="ch-card" onclick="changeChannel('https://s2.ideationtec.live/City_42/City_42.m3u8','City 42')" title="City 42"><img src="https://media.zongmobiletv.com/file/channel_thumbs/Y4ddXPCykiWAlldmrRLppuGFtVLAtcmR2CLMeC1b.webp" alt="City 42" loading="lazy"><div class="ch-overlay"></div><div class="ch-live-dot"></div><div class="ch-play-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(206,147,216,0.85)"/><path d="M19 16l14 8-14 8V16z" fill="white"/></svg></div><div class="ch-playing-icon"><span></span><span></span><span></span></div></div>
+                <div class="ch-card" onclick="changeChannel('https://s1.ideationtec.live/Sindh_TV/Sindh_TV.m3u8','Sindh TV')" title="Sindh TV"><img src="https://media.zongmobiletv.com/file/channel_thumbs/04XlRBGO8zFGzWohRL78ARS8r0IlvivPxkREdbGu.webp" alt="Sindh TV" loading="lazy"><div class="ch-overlay"></div><div class="ch-live-dot"></div><div class="ch-play-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(206,147,216,0.85)"/><path d="M19 16l14 8-14 8V16z" fill="white"/></svg></div><div class="ch-playing-icon"><span></span><span></span><span></span></div></div>
+                <div class="ch-card" onclick="changeChannel('https://s1.ideationtec.live/Mashriq_TV/Mashriq_TV.m3u8','Mashriq TV')" title="Mashriq TV"><img src="https://media.zongmobiletv.com/file/channel_thumbs/Cha4VU8j9Flc40Ba6PB5AB6LGrAeTTpSuwWoPdiJ.webp" alt="Mashriq TV" loading="lazy"><div class="ch-overlay"></div><div class="ch-live-dot"></div><div class="ch-play-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(206,147,216,0.85)"/><path d="M19 16l14 8-14 8V16z" fill="white"/></svg></div><div class="ch-playing-icon"><span></span><span></span><span></span></div></div>
+                <div class="ch-card" onclick="changeChannel('https://s2.ideationtec.live/Mehran_TV/Mehran_TV.m3u8','Mehran TV')" title="Mehran TV"><img src="https://media.zongmobiletv.com/file/channel_thumbs/XSa3EkzBQ5Mc1eQGJ99E3Ta5zAJuUvUu4yWui95K.webp" alt="Mehran TV" loading="lazy"><div class="ch-overlay"></div><div class="ch-live-dot"></div><div class="ch-play-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(206,147,216,0.85)"/><path d="M19 16l14 8-14 8V16z" fill="white"/></svg></div><div class="ch-playing-icon"><span></span><span></span><span></span></div></div>
+            </div>
+        </div>
+
+        <!-- ===== ISLAMIC ===== -->
+        <div class="category-block" data-category="Islamic" id="cat-islamic">
+            <div class="category-header">
+                <div class="category-icon" style="background:rgba(165,214,167,0.12)">🕌</div>
+                <span class="category-title">Islamic</span>
+                <span class="category-count" id="count-Islamic"></span>
+            </div>
+            <div class="channels-grid">
+                <div class="ch-card" onclick="changeChannel('https://s1.ideationtec.live/Saudi_Sunnah_HD/Saudi_Sunnah_HD.m3u8','Saudi Sunnah HD')" title="Saudi Sunnah HD"><img src="https://media.zongmobiletv.com/file/channel_thumbs/EM41FIPZH2nEUAoBv3hkybswqTErm1dzVIUkdPl2.webp" alt="Saudi Sunnah" loading="lazy"><div class="ch-overlay"></div><div class="ch-live-dot"></div><div class="ch-play-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(165,214,167,0.85)"/><path d="M19 16l14 8-14 8V16z" fill="white"/></svg></div><div class="ch-playing-icon"><span></span><span></span><span></span></div></div>
+                <div class="ch-card" onclick="changeChannel('https://s1.ideationtec.live/Madani_TV/Madani_TV.m3u8','Madani TV')" title="Madani TV"><img src="https://media.zongmobiletv.com/file/channel_thumbs/7gjACj9Fx1cbrWtl8wRcq0vn9eUeoXDQCO3GmRnp.webp" alt="Madani TV" loading="lazy"><div class="ch-overlay"></div><div class="ch-live-dot"></div><div class="ch-play-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(165,214,167,0.85)"/><path d="M19 16l14 8-14 8V16z" fill="white"/></svg></div><div class="ch-playing-icon"><span></span><span></span><span></span></div></div>
+                <div class="ch-card" onclick="changeChannel('https://s1.ideationtec.live/Saudi_Quran_HD/Saudi_Quran_HD.m3u8','Saudi Quran HD')" title="Saudi Quran HD"><img src="https://media.zongmobiletv.com/file/channel_thumbs/95wCOT40aoxoK9RRlreKTPkmJ4ws0q3hhwHvxBgK.webp" alt="Saudi Quran" loading="lazy"><div class="ch-overlay"></div><div class="ch-live-dot"></div><div class="ch-play-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(165,214,167,0.85)"/><path d="M19 16l14 8-14 8V16z" fill="white"/></svg></div><div class="ch-playing-icon"><span></span><span></span><span></span></div></div>
+            </div>
+        </div>
+
+    </section>
+</main>
+
+<!-- ============================================================
+     FOOTER
+============================================================ -->
+<footer id="site-footer">
+    <div class="footer-inner">
+        <div>
+            <div class="footer-brand-title">Stream Pk Tv</div>
+            <p class="footer-tagline">Pakistan's premier live streaming platform. Watch your favourite channels anytime, anywhere.</p>
+        </div>
+        <div>
+            <div class="footer-col-title">Quick Links</div>
+            <div class="footer-links">
+                <a href="#">About Us</a>
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms & Conditions</a>
+                <a href="#">Contact Us</a>
+                <a href="#">FAQs</a>
+            </div>
+        </div>
+        <div>
+            <div class="footer-col-title">Categories</div>
+            <div class="footer-links">
+                <a href="#cat-entertainment">Entertainment</a>
+                <a href="#cat-news">News</a>
+                <a href="#cat-movies">Movies</a>
+                <a href="#cat-kids">Kids</a>
+                <a href="#cat-regional">Regional</a>
+                <a href="#cat-islamic">Islamic</a>
+            </div>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <span>© 2025 Stream Pk Tv. All rights reserved.</span>
+    </div>
+</footer>
+
+
+
+<!-- Scroll to top -->
+<button id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Scroll to top">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <path d="M12 19V5M5 12l7-7 7 7" stroke="#04060f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+</button>
+
+<!-- ============================================================
+     SCRIPTS
+============================================================ -->
+<script src="https://vjs.zencdn.net/8.8.0/video.min.js"></script>
+
+<script>
+// ── SPLASH SCREEN ──────────────────────────────────────────────
+window.addEventListener('load', function() {
+    setTimeout(function() {
+        document.getElementById('splash').classList.add('hidden');
+    }, 2800);
+});
+
+// ── VIDEO PLAYER ───────────────────────────────────────────────
+var player;
+document.addEventListener('DOMContentLoaded', function() {
+    player = videojs('my-video', {
+        autoplay: true,
+        muted: false,
+        preload: 'auto',
+        controls: true,
+        fluid: true,
+        playbackRates: [0.5, 1, 1.25, 1.5, 2],
+        html5: {
+            vhs: { overrideNative: true },
+            nativeAudioTracks: false,
+            nativeVideoTracks: false
+        }
+    });
+
+    // Count channels per category
+    document.querySelectorAll('.category-block').forEach(function(block) {
+        var cat = block.dataset.category;
+        var count = block.querySelectorAll('.ch-card').length;
+        var el = document.getElementById('count-' + cat);
+        if (el) el.textContent = count + ' channels';
+    });
+});
+
+// ── CHANGE CHANNEL ─────────────────────────────────────────────
+var currentCard = null;
+
+window.changeChannel = function(url, name) {
+    // Player is sticky — no need to scroll
+
+    // Update player
+    if (player) {
+        player.src({ src: url, type: 'application/x-mpegURL' });
+        player.muted(false);
+        player.play();
+    }
+
+    // Update now playing label
+    var label = document.getElementById('now-playing');
+    if (label && name) label.textContent = name;
+
+    // Update active card
+    if (currentCard) currentCard.classList.remove('playing');
+    // Find the card that was clicked (via event target traversal)
+    var cards = document.querySelectorAll('.ch-card');
+    cards.forEach(function(card) {
+        if (card.getAttribute('onclick') && card.getAttribute('onclick').includes(url.split('/').pop())) {
+            card.classList.add('playing');
+            currentCard = card;
+        }
+    });
+};
+
+// ── CATEGORY FILTER ────────────────────────────────────────────
+window.filterCategory = function(cat, btn) {
+    // Update tabs
+    if (btn) {
+        document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+    }
+
+    // Show/hide categories
+    document.querySelectorAll('.category-block').forEach(function(block) {
+        if (cat === 'all' || block.dataset.category === cat) {
+            block.style.display = '';
+        } else {
+            block.style.display = 'none';
+        }
+    });
+};
+
+// ── DRAWER ─────────────────────────────────────────────────────
+window.toggleDrawer = function() {
+    document.getElementById('mobileDrawer').classList.toggle('open');
+};
+window.closeDrawer = function() {
+    document.getElementById('mobileDrawer').classList.remove('open');
+};
+
+// ── SCROLL TO TOP BUTTON ───────────────────────────────────────
+window.addEventListener('scroll', function() {
+    var btn = document.getElementById('scroll-top');
+    if (window.scrollY > 300) btn.classList.add('visible');
+    else btn.classList.remove('visible');
+});
+
+// ── LOGIN MODAL REMOVED ────────────────────────────────────────
+</script>
+
+</body>
+</html>
